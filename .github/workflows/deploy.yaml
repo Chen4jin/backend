@@ -1,0 +1,51 @@
+name: Build & Deploy Docker to EC2
+
+on:
+  release:
+    types: [published]
+
+env:
+  APP: "backend"
+  PORT_TO: 443
+  PORT_FROM: 8080
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/$APP:latest .
+
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/$APP:latest
+
+      - name: Setup SSH key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
+          chmod 600 ec2_key.pem
+
+      - name: Deploy Docker container on EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            # Stop old container if exists
+            docker stop $APP || true
+            docker rm $APP || true
+
+            # Pull the latest image
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/$APP:latest
+
+            # Run container
+            docker run -d --name $APP -p $PORT_TO:$PORT_FROM ${{ secrets.DOCKERHUB_USERNAME }}/$APP:latest
+          EOF
