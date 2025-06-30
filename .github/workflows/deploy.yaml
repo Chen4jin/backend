@@ -43,6 +43,8 @@ jobs:
             docker stop $APP || true
             docker rm $APP || true
 
+            # Docker login
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
             # Pull the latest image
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/}
 
