@@ -1,10 +1,10 @@
 package com.api.pdf;
 
 import com.api.common.ApiResponse;
+import com.api.common.Constant;
 import com.api.common.S3Connector;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
-import com.api.common.Constant;
 
 public class CV {
   private final S3Connector connector;
@@ -19,14 +19,12 @@ public class CV {
   }
 
   public ResponseEntity<ApiResponse> getCV() {
-    String cdn = new StringBuilder()
-        .append(Constant.getCloudFront())
-        .append(resume)
-        .toString();
+    String cdn = new StringBuilder().append(Constant.getCloudFront()).append(resume).toString();
 
     Map<String, String> map = Map.of("url", cdn);
 
-    ApiResponse response = new ApiResponse("success", 200, "CloudFront-hosted URL for CV download", map, null);
+    ApiResponse response =
+        new ApiResponse("success", 200, "CloudFront-hosted URL for CV download", map, null);
     return ResponseEntity.ok(response);
   }
 }

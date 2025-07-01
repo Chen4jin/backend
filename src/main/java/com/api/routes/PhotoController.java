@@ -34,7 +34,8 @@ public class PhotoController {
   }
 
   @PutMapping("/images/{imagesId}")
-  public ResponseEntity<ApiResponse> postPhoto(@PathVariable String imagesId, @RequestBody PutPhotoRequest request) {
+  public ResponseEntity<ApiResponse> postPhoto(
+      @PathVariable String imagesId, @RequestBody PutPhotoRequest request) {
     PhotoDB photo = new PhotoDB();
     return photo.postPhoto(imagesId, request.getfileName(), request.getSizeBytes());
   }

@@ -1,10 +1,9 @@
 package com.api.collection;
 
 import com.api.common.ApiResponse;
-import com.api.common.DynamoDBConnection;
 import com.api.common.Constant;
+import com.api.common.DynamoDBConnection;
 import com.api.response.PhotoResponse;
-
 import java.net.URLConnection;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -40,8 +39,8 @@ public class PhotoDB {
 
     // Define a filter expression to include only items where 'isDeleted' is false
     String filterExpression = "isDeleted = :val";
-    Map<String, AttributeValue> expressionAttributeValues = Map.of(":val",
-        AttributeValue.builder().bool(false).build());
+    Map<String, AttributeValue> expressionAttributeValues =
+        Map.of(":val", AttributeValue.builder().bool(false).build());
 
     // Build the ScanRequest with the following parameters:
     // - projectionExpression to limit returned attributes
@@ -49,12 +48,13 @@ public class PhotoDB {
     // - filterExpression to apply a filter condition on the scan
     // - expressionAttributeValues to supply values for filter placeholders
     // - limit to restrict the number of items returned per scan page (pagination)
-    ScanRequest.Builder scanBuilder = ScanRequest.builder()
-        .projectionExpression(projectionExpression)
-        .tableName(this.tableName)
-        .filterExpression(filterExpression)
-        .expressionAttributeValues(expressionAttributeValues)
-        .limit(pageSize);
+    ScanRequest.Builder scanBuilder =
+        ScanRequest.builder()
+            .projectionExpression(projectionExpression)
+            .tableName(this.tableName)
+            .filterExpression(filterExpression)
+            .expressionAttributeValues(expressionAttributeValues)
+            .limit(pageSize);
 
     // If a last evaluated key is provided (for pagination), set it as the exclusive
     // start key
@@ -98,15 +98,22 @@ public class PhotoDB {
         responseData.add(newItem);
       }
 
-      ApiResponse base = new ApiResponse("success", 200,
-          "The resource has been fetched and transmitted in the message body.", responseData, null);
+      ApiResponse base =
+          new ApiResponse(
+              "success",
+              200,
+              "The resource has been fetched and transmitted in the message body.",
+              responseData,
+              null);
       requestResponse = new PhotoResponse(base, imageID, hasMore);
 
       return ResponseEntity.ok(requestResponse);
 
     } catch (NullPointerException e) {
       String[] responseData = new String[0];
-      ApiResponse base = new ApiResponse("error", 500, "Failed to init DynamoDbClient", responseData, e.getMessage());
+      ApiResponse base =
+          new ApiResponse(
+              "error", 500, "Failed to init DynamoDbClient", responseData, e.getMessage());
       requestResponse = new PhotoResponse(base, "", false);
       return ResponseEntity.internalServerError().body(requestResponse);
     }
@@ -118,20 +125,17 @@ public class PhotoDB {
 
     // Construct the CloudFront CDN URL by concatenating CloudFront base URL and
     // image ID
-    String cdn = new StringBuilder()
-        .append(Constant.getCloudFront())
-        .append(imageID)
-        .toString();
+    String cdn = new StringBuilder().append(Constant.getCloudFront()).append(imageID).toString();
 
     // Guess content type (MIME type) from the filename extension
     String contentType = URLConnection.guessContentTypeFromName(fileName);
 
     // Get the current UTC timestamp formatted as ISO 8601 string (without
     // milliseconds)
-    String now = DateTimeFormatter
-        .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
-        .withZone(ZoneOffset.UTC)
-        .format(Instant.now());
+    String now =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            .withZone(ZoneOffset.UTC)
+            .format(Instant.now());
 
     // Create a map representing the DynamoDB item attributes
     Map<String, AttributeValue> item = new HashMap<>();
@@ -145,14 +149,16 @@ public class PhotoDB {
     item.put("cloudFront", AttributeValue.builder().s(cdn).build());
 
     // Define a condition expression to ensure no existing item has the same imageID
-    String conditionExpression = new StringBuilder().append("attribute_not_exists(imageID)").toString();
+    String conditionExpression =
+        new StringBuilder().append("attribute_not_exists(imageID)").toString();
 
     // Build the PutItemRequest with condition to prevent overwriting existing item
-    PutItemRequest putRequest = PutItemRequest.builder()
-        .tableName(this.tableName)
-        .item(item)
-        .conditionExpression(conditionExpression)
-        .build();
+    PutItemRequest putRequest =
+        PutItemRequest.builder()
+            .tableName(this.tableName)
+            .item(item)
+            .conditionExpression(conditionExpression)
+            .build();
 
     try {
       // Attempt to insert the item into DynamoDB only if imageID doesn't exist
@@ -161,19 +167,21 @@ public class PhotoDB {
       // NullPointerException might happen if any variable is null (consider better
       // checks)
 
-      ApiResponse response = new ApiResponse("error", 500, "Failed to init DynamoDbClient", "",
-          e.getMessage());
+      ApiResponse response =
+          new ApiResponse("error", 500, "Failed to init DynamoDbClient", "", e.getMessage());
       return ResponseEntity.internalServerError().body(response);
     } catch (ConditionalCheckFailedException e) {
       // ConditionalCheckFailedException occurs if imageID already exists (insert
       // rejected)
 
-      ApiResponse response = new ApiResponse("error", 500, "item already exist", "", e.getMessage());
+      ApiResponse response =
+          new ApiResponse("error", 500, "item already exist", "", e.getMessage());
       return ResponseEntity.internalServerError().body(response);
     }
 
-    ApiResponse requestResponse = new ApiResponse("success", 200,
-        "S3 image metadata synced successfully in the database", "", null);
+    ApiResponse requestResponse =
+        new ApiResponse(
+            "success", 200, "S3 image metadata synced successfully in the database", "", null);
     return ResponseEntity.ok(requestResponse);
   }
 }
