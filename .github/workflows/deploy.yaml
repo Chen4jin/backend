@@ -56,7 +56,7 @@ jobs:
 
                     # Run container
                     docker run \
-                    -e KEYSTORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}'' \
+                    -e KEYSTORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}' \
                     -e  KEYSTORE_PATH="classpath:origin.p12" \
                     -d --name $APP \
                     -p $PORT_TO:$PORT_FROM \
