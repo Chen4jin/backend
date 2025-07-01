@@ -1,16 +1,11 @@
 package com.api.records;
 
-public class PostPhoto {
+public class PutPhotoRequest {
   private String fileName;
-  private String imageID;
   private String sizeBytes;
 
   public String getfileName() {
     return fileName;
-  }
-
-  public String getImageID() {
-    return imageID;
   }
 
   public String getSizeBytes() {

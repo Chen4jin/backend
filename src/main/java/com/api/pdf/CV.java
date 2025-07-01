@@ -4,28 +4,29 @@ import com.api.common.ApiResponse;
 import com.api.common.S3Connector;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
+import com.api.common.Constant;
 
-public class GetCV {
+public class CV {
   private final S3Connector connector;
+  private final String resume = "CV.pdf";
 
   public S3Connector getConnector() {
     return this.connector;
   }
 
-  public GetCV() {
+  public CV() {
     connector = new S3Connector();
   }
 
   public ResponseEntity<ApiResponse> getCV() {
-    String cdn =
-        new StringBuilder()
-            .append("https://d3bjrjf10s3vbi.cloudfront.net/")
-            .append("CV.pdf")
-            .toString();
+    String cdn = new StringBuilder()
+        .append(Constant.getCloudFront())
+        .append(resume)
+        .toString();
 
     Map<String, String> map = Map.of("url", cdn);
 
-    ApiResponse requestResponse = new ApiResponse(true, "pre-signed url for s3 upload", map);
-    return ResponseEntity.ok(requestResponse);
+    ApiResponse response = new ApiResponse("success", 200, "CloudFront-hosted URL for CV download", map, null);
+    return ResponseEntity.ok(response);
   }
 }

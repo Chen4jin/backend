@@ -1,23 +1,25 @@
-package com.api.route;
+package com.api.routes;
 
 import com.api.collection.PhotoDB;
 import com.api.collection.PhotoS3;
 import com.api.common.ApiResponse;
-import com.api.records.PostPhoto;
+import com.api.records.PutPhotoRequest;
+import com.api.records.UploadURLRequest;
 import com.api.response.PhotoResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/v1")
 public class PhotoController {
-  @CrossOrigin(origins = "http://localhost:3000")
-  @GetMapping("/photo")
+  @GetMapping("/images")
   public ResponseEntity<PhotoResponse> getPhoto(
       @RequestParam(value = "lastKey", required = false) String lastKey,
       @RequestParam("page") Integer page) {
@@ -25,17 +27,15 @@ public class PhotoController {
     return photo.getPhoto(lastKey, page);
   }
 
-  @CrossOrigin(origins = "http://localhost:3000")
-  @PutMapping("/photo")
-  public ResponseEntity<ApiResponse> putPhoto() {
+  @PostMapping("/images/upload-url")
+  public ResponseEntity<ApiResponse> uploadURL(@RequestBody UploadURLRequest request) {
     PhotoS3 photo = new PhotoS3();
-    return photo.putPhoto();
+    return photo.uploadURL(request.getContentType());
   }
 
-  @CrossOrigin(origins = "http://localhost:3000")
-  @PostMapping("/photo")
-  public ResponseEntity<ApiResponse> postPhoto(@RequestBody PostPhoto request) {
+  @PutMapping("/images/{imagesId}")
+  public ResponseEntity<ApiResponse> postPhoto(@PathVariable String imagesId, @RequestBody PutPhotoRequest request) {
     PhotoDB photo = new PhotoDB();
-    return photo.postPhoto(request.getImageID(), request.getfileName(), request.getSizeBytes());
+    return photo.postPhoto(imagesId, request.getfileName(), request.getSizeBytes());
   }
 }

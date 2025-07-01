@@ -1,6 +1,6 @@
 package com.api.records;
 
-public class GetPhoto {
+public class GetPhotoRequest {
   private final String lastKey = "";
   private final Integer pageSize = 10;
 

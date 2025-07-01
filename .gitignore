@@ -42,5 +42,10 @@ Thumbs.db
 # Spring Boot specific
 spring.log
 
+# key
+*.pem
+*.p12
+
 # Others
 *.swp
+

@@ -1,3 +1,4 @@
 package com.api.common;
 
-public record ApiResponse(boolean success, String message, Object data) {}
+public record ApiResponse(String status, Integer code, String message, Object data, String error) {
+}

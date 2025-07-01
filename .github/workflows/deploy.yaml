@@ -1,53 +1,64 @@
 name: Build & Deploy Docker to EC2
 
 on:
-  release:
-    types: [published]
+    release:
+        types: [published]
 
 env:
-  APP: "backend"
-  PORT_TO: 443
-  PORT_FROM: 8080
+    APP: "backend"
+    PORT_TO: 443
+    PORT_FROM: 8080
+    KEYSTORE_PATH: "./src/main/resources/origin.p12"
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+    build-and-deploy:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+            - name: Log in to Docker Hub
+              uses: docker/login-action@v3
+              with:
+                  username: ${{ secrets.DOCKERHUB_USERNAME }}
+                  password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/} .
+            - name: Decode keystore from secret and save file
+              run: |
+                  echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $KEYSTORE_PATH
 
-      - name: Push Docker image to Docker Hub
-        run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/}
+            - name: Build Docker image
+              run: |
+                  docker build \
+                  -t ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/} .
 
-      - name: Setup SSH key
-        run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
-          chmod 600 ec2_key.pem
+            - name: Push Docker image to Docker Hub
+              run: |
+                  docker push ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/}
 
-      - name: Deploy Docker container on EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-            # Stop old container if exists
-            docker stop $APP 2>/dev/null || true
-            docker rm $APP 2>/dev/null || true
+            - name: Setup SSH key
+              run: |
+                  echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
+                  chmod 600 ec2_key.pem
 
-            # Docker login
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-            # Pull the latest image
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/}
+            - name: Deploy Docker container on EC2
+              run: |
+                  ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+                    # Stop old container if exists
+                    docker stop $APP 2>/dev/null || true
+                    docker rm $APP 2>/dev/null || true
 
-            # Run container
-            docker run -d --name $APP -p $PORT_TO:$PORT_FROM ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/}
-          EOF
+                    # Docker login
+                    echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+                    # Pull the latest image
+                    docker pull ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/}
+
+                    # Run container
+                    docker run \
+                    -e KEYSTORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}'' \
+                    -e  KEYSTORE_PATH="classpath:origin.p12" \
+                    -d --name $APP \
+                    -p $PORT_TO:$PORT_FROM \
+                    ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/}
+                  EOF
