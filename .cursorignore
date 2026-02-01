@@ -1,0 +1,29 @@
+# Files to exclude from Cursor AI indexing
+# Similar to .gitignore syntax
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+secrets/
+
+# Sensitive configuration
+**/application-prod.properties
+**/application-secret.properties
+
+# Build artifacts
+target/
+build/
+*.jar
+*.war
+
+# IDE and system files
+.idea/
+*.iml
+.DS_Store
+
+# Logs
+*.log
+logs/

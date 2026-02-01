@@ -46,6 +46,12 @@ spring.log
 *.pem
 *.p12
 
+# Secrets - NEVER commit these!
+application-secrets.properties
+*-secrets.properties
+.env
+.env.*
+
 # Others
 *.swp
 
