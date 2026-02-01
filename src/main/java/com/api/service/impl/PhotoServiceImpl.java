@@ -23,6 +23,8 @@ import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedExce
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
 import software.amazon.awssdk.services.dynamodb.model.ScanResponse;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.UpdateItemResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
@@ -206,6 +208,39 @@ public class PhotoServiceImpl implements PhotoService {
     } catch (ConditionalCheckFailedException e) {
       logger.warn("Photo already exists: imageId={}", imageId);
       return new ApiResponse("error", 409, "Image already exists", null, e.getMessage());
+    }
+  }
+
+  @Override
+  public ApiResponse deletePhoto(String imageId) {
+    logger.debug("Deleting photo with imageId={}", imageId);
+
+    if (imageId == null || imageId.isBlank()) {
+      throw new IllegalArgumentException("Image ID is required");
+    }
+
+    Map<String, AttributeValue> key = new HashMap<>();
+    key.put(ATTR_IMAGE_ID, AttributeValue.builder().s(imageId).build());
+
+    Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+    expressionAttributeValues.put(":deleted", AttributeValue.builder().bool(true).build());
+
+    UpdateItemRequest updateRequest =
+        UpdateItemRequest.builder()
+            .tableName(awsProperties.getPhotoTable())
+            .key(key)
+            .updateExpression("SET " + ATTR_IS_DELETED + " = :deleted")
+            .expressionAttributeValues(expressionAttributeValues)
+            .conditionExpression("attribute_exists(" + ATTR_IMAGE_ID + ")")
+            .build();
+
+    try {
+      dynamoDbClient.updateItem(updateRequest);
+      logger.info("Deleted photo with imageId={}", imageId);
+      return new ApiResponse("success", 200, "Photo deleted successfully", null, null);
+    } catch (ConditionalCheckFailedException e) {
+      logger.warn("Photo not found: imageId={}", imageId);
+      return new ApiResponse("error", 404, "Photo not found", null, e.getMessage());
     }
   }
 }

@@ -35,4 +35,12 @@ public interface PhotoService {
    * @return ApiResponse indicating success or failure
    */
   ApiResponse savePhotoMetadata(String imageId, String fileName, String sizeBytes);
+
+  /**
+   * Deletes a photo by setting its isDeleted flag to true (soft delete).
+   *
+   * @param imageId the unique identifier for the image to delete
+   * @return ApiResponse indicating success or failure
+   */
+  ApiResponse deletePhoto(String imageId);
 }
