@@ -31,11 +31,11 @@ jobs:
             - name: Build Docker image
               run: |
                   docker build \
-                  -t ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/} .
+                  -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP }}:${{ github.ref_name }} .
 
             - name: Push Docker image to Docker Hub
               run: |
-                  docker push ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/}
+                  docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.APP }}:${{ github.ref_name }}
 
             - name: Setup SSH key
               run: |
@@ -44,21 +44,31 @@ jobs:
 
             - name: Deploy Docker container on EC2
               run: |
-                  ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
-                    # Stop old container if exists
+                  ssh -o StrictHostKeyChecking=no -i ec2_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENDSSH'
+                    APP="backend"
+                    PORT_TO=443
+                    PORT_FROM=8080
+                    IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/backend:${{ github.ref_name }}"
+
+                    # Stop and remove old container if exists
                     docker stop $APP 2>/dev/null || true
                     docker rm $APP 2>/dev/null || true
 
+                    # Also kill any process using port 443 (safety net)
+                    sudo fuser -k 443/tcp 2>/dev/null || true
+
                     # Docker login
                     echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+
                     # Pull the latest image
-                    docker pull ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/}
+                    docker pull $IMAGE
 
                     # Run container
                     docker run \
-                    -e KEYSTORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}' \
-                    -e  KEYSTORE_PATH="classpath:origin.p12" \
-                    -d --name $APP \
-                    -p $PORT_TO:$PORT_FROM \
-                    ${{ secrets.DOCKERHUB_USERNAME }}/$APP:${GITHUB_REF#refs/tags/}
-                  EOF
+                      -e KEYSTORE_PASSWORD='${{ secrets.KEYSTORE_PASSWORD }}' \
+                      -e KEYSTORE_PATH="classpath:origin.p12" \
+                      -d --name $APP \
+                      --restart unless-stopped \
+                      -p $PORT_TO:$PORT_FROM \
+                      $IMAGE
+                  ENDSSH
