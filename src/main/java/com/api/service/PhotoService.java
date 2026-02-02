@@ -1,6 +1,8 @@
 package com.api.service;
 
 import com.api.common.ApiResponse;
+import com.api.dto.request.PatchPhotoRequest;
+import com.api.dto.request.PutPhotoRequest;
 import com.api.dto.response.PhotoResponse;
 
 /**
@@ -28,13 +30,21 @@ public interface PhotoService {
 
   /**
    * Saves photo metadata to the database after upload.
+   * Optional EXIF fields in the request are persisted when present.
    *
-   * @param imageId the unique identifier for the image
-   * @param fileName the original file name
-   * @param sizeBytes the file size in bytes
+   * @param request photo metadata (imageID, fileName, sizeBytes) and optional EXIF
    * @return ApiResponse indicating success or failure
    */
-  ApiResponse savePhotoMetadata(String imageId, String fileName, String sizeBytes);
+  ApiResponse savePhotoMetadata(PutPhotoRequest request);
+
+  /**
+   * Updates photo metadata (e.g. display name). Only provided fields are updated.
+   *
+   * @param imageId the unique identifier for the photo to update
+   * @param request fields to update (all optional)
+   * @return ApiResponse indicating success or failure
+   */
+  ApiResponse updatePhotoMetadata(String imageId, PatchPhotoRequest request);
 
   /**
    * Deletes a photo by setting its isDeleted flag to true (soft delete).

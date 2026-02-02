@@ -1,6 +1,7 @@
 package com.api.controller;
 
 import com.api.common.ApiResponse;
+import com.api.dto.request.PatchPhotoRequest;
 import com.api.dto.request.PutPhotoRequest;
 import com.api.dto.response.PhotoResponse;
 import com.api.service.PhotoService;
@@ -10,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -76,8 +78,24 @@ public class PhotoController {
       @Valid @RequestBody PutPhotoRequest request) {
     logger.info("Saving photo metadata for imageId={}", request.getImageID());
 
-    ApiResponse response =
-        photoService.savePhotoMetadata(request.getImageID(), request.getFileName(), request.getSizeBytes());
+    ApiResponse response = photoService.savePhotoMetadata(request);
+    return ResponseEntity.ok(response);
+  }
+
+  /**
+   * Updates photo metadata (e.g. display name). Used by edit metadata UI.
+   *
+   * @param imageId the unique identifier of the photo to update
+   * @param request metadata fields to update (e.g. fileName)
+   * @return success or error response
+   */
+  @PatchMapping("/images/{imageId}")
+  public ResponseEntity<ApiResponse> updatePhotoMetadata(
+      @PathVariable String imageId,
+      @Valid @RequestBody PatchPhotoRequest request) {
+    logger.info("Updating photo metadata for imageId={}", imageId);
+
+    ApiResponse response = photoService.updatePhotoMetadata(imageId, request);
     return ResponseEntity.ok(response);
   }
 

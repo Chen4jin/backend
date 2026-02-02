@@ -1,63 +1,49 @@
 package com.api.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * Request DTO for saving photo metadata after upload.
- * Optional EXIF fields can be sent when the client extracts EXIF from the uploaded image.
+ * Request DTO for updating photo metadata (edit metadata from UI).
+ * All fields are optional; only provided fields are updated.
  */
-public class PutPhotoRequest {
+public class PatchPhotoRequest {
 
-  @NotBlank(message = "Image ID is required")
-  private String imageID;
-
-  @NotBlank(message = "File name is required")
+  @Size(max = 512, message = "File name must not exceed 512 characters")
   private String fileName;
 
-  @NotBlank(message = "File size is required")
-  @Pattern(regexp = "^\\d+$", message = "Size must be a valid number")
-  private String sizeBytes;
-
-  // Optional EXIF / metadata (from client-side EXIF extraction on upload)
-  @Size(max = 512)
+  @Size(max = 512, message = "Title must not exceed 512 characters")
   private String title;
-  @Size(max = 2048)
+
+  @Size(max = 2048, message = "Description must not exceed 2048 characters")
   private String description;
-  @Size(max = 256)
+
+  @Size(max = 256, message = "Camera must not exceed 256 characters")
   private String camera;
-  @Size(max = 256)
+
+  @Size(max = 256, message = "Lens must not exceed 256 characters")
   private String lens;
-  @Size(max = 64)
+
+  @Size(max = 64, message = "Aperture must not exceed 64 characters")
   private String aperture;
-  @Size(max = 64)
+
+  @Size(max = 64, message = "Shutter must not exceed 64 characters")
   private String shutter;
-  @Size(max = 32)
+
+  @Size(max = 32, message = "ISO must not exceed 32 characters")
   private String iso;
-  @Size(max = 64)
+
+  @Size(max = 64, message = "Focal length must not exceed 64 characters")
   private String focalLength;
-  @Size(max = 512)
+
+  @Size(max = 512, message = "Location must not exceed 512 characters")
   private String location;
-  @Size(max = 64)
+
+  /** Date taken (e.g. ISO 8601 string from payload). */
+  @Size(max = 64, message = "Date taken must not exceed 64 characters")
   private String dateTaken;
 
   /** Default constructor for JSON deserialization. */
-  public PutPhotoRequest() {}
-
-  public PutPhotoRequest(String imageID, String fileName, String sizeBytes) {
-    this.imageID = imageID;
-    this.fileName = fileName;
-    this.sizeBytes = sizeBytes;
-  }
-
-  public String getImageID() {
-    return imageID;
-  }
-
-  public void setImageID(String imageID) {
-    this.imageID = imageID;
-  }
+  public PatchPhotoRequest() {}
 
   public String getFileName() {
     return fileName;
@@ -65,14 +51,6 @@ public class PutPhotoRequest {
 
   public void setFileName(String fileName) {
     this.fileName = fileName;
-  }
-
-  public String getSizeBytes() {
-    return sizeBytes;
-  }
-
-  public void setSizeBytes(String sizeBytes) {
-    this.sizeBytes = sizeBytes;
   }
 
   public String getTitle() {
