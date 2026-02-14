@@ -35,6 +35,7 @@ public class ProfileServiceImpl implements ProfileService {
   private static final Duration PRESIGNED_URL_DURATION = Duration.ofMinutes(5);
   private static final String PROFILE_ID = "main";
   private static final int MAX_MESSAGE_LENGTH = 1000;
+  private static final String STATUS_SUCCESS = "success";
 
   // DynamoDB attribute names
   private static final String ATTR_PROFILE_ID = "profileId";
@@ -60,7 +61,7 @@ public class ProfileServiceImpl implements ProfileService {
     String selfieUrl = awsProperties.getAssetsCloudFront() + Constant.getSelfieKey();
 
     Map<String, String> data = Map.of("url", selfieUrl);
-    return new ApiResponse("success", 200, "Selfie URL retrieved successfully", data, null);
+    return new ApiResponse(STATUS_SUCCESS, 200, "Selfie URL retrieved successfully", data, null);
   }
 
   @Override
@@ -82,7 +83,7 @@ public class ProfileServiceImpl implements ProfileService {
     String resumeUrl = awsProperties.getAssetsCloudFront() + Constant.getResumeKey();
 
     Map<String, String> data = Map.of("url", resumeUrl);
-    return new ApiResponse("success", 200, "Resume URL retrieved successfully", data, null);
+    return new ApiResponse(STATUS_SUCCESS, 200, "Resume URL retrieved successfully", data, null);
   }
 
   @Override
@@ -119,7 +120,7 @@ public class ProfileServiceImpl implements ProfileService {
       }
     }
 
-    return new ApiResponse("success", 200, "Social links retrieved successfully", responseData, null);
+    return new ApiResponse(STATUS_SUCCESS, 200, "Social links retrieved successfully", responseData, null);
   }
 
   @Override
@@ -145,7 +146,7 @@ public class ProfileServiceImpl implements ProfileService {
       responseData.put("message", item.get(ATTR_SITE_MESSAGE).s());
     }
 
-    return new ApiResponse("success", 200, "Site message retrieved successfully", responseData, null);
+    return new ApiResponse(STATUS_SUCCESS, 200, "Site message retrieved successfully", responseData, null);
   }
 
   @Override
@@ -195,7 +196,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
     responseData.put(ATTR_UPDATED_AT, now);
 
-    return new ApiResponse("success", 200, "Social links saved successfully", responseData, null);
+    return new ApiResponse(STATUS_SUCCESS, 200, "Social links saved successfully", responseData, null);
   }
 
   @Override
@@ -233,7 +234,7 @@ public class ProfileServiceImpl implements ProfileService {
         "message", sanitizedMessage,
         ATTR_UPDATED_AT, now);
 
-    return new ApiResponse("success", 200, "Site message saved successfully", responseData, null);
+    return new ApiResponse(STATUS_SUCCESS, 200, "Site message saved successfully", responseData, null);
   }
 
   private ApiResponse generatePresignedUrl(String s3Key, String contentType, String assetType) {
@@ -261,7 +262,7 @@ public class ProfileServiceImpl implements ProfileService {
             "expiresInMinutes", String.valueOf(PRESIGNED_URL_DURATION.toMinutes()));
 
     return new ApiResponse(
-        "success",
+        STATUS_SUCCESS,
         200,
         String.format("Presigned URL generated for %s upload", assetType),
         data,

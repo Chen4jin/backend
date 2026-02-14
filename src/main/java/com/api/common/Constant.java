@@ -1,6 +1,5 @@
 package com.api.common;
 
-import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 import software.amazon.awssdk.regions.Region;
@@ -21,10 +20,6 @@ public final class Constant {
   // S3 Buckets
   public static final String PHOTOS_BUCKET = "photos-jin";
   public static final String ASSETS_BUCKET = "generic-jin";
-
-  // CloudFront URLs (update these after setting up distributions)
-  public static final URI PHOTOS_CLOUD_FRONT = URI.create("https://d3bjrjf10s3vbi.cloudfront.net/");
-  public static final URI ASSETS_CLOUD_FRONT = URI.create("https://d3bjrjf10s3vbi.cloudfront.net/");
 
   // S3 key prefixes for static assets
   public static final String STATIC_PREFIX = "static/";
@@ -70,14 +65,6 @@ public final class Constant {
 
   public static String getAssetsBucket() {
     return ASSETS_BUCKET;
-  }
-
-  public static String getPhotosCloudFront() {
-    return PHOTOS_CLOUD_FRONT.toString();
-  }
-
-  public static String getAssetsCloudFront() {
-    return ASSETS_CLOUD_FRONT.toString();
   }
 
   public static String getSelfieKey() {
